@@ -1,0 +1,42 @@
+#!/sbin/runscript
+# Copyright 1999-2008 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header: /var/cvsroot/gentoo-x86/dev-vcs/git/files/git-daemon.initd,v 1.1 2010/03/17 15:13:27 sping Exp $
+
+##FIXME: Add a socket access control mechanism.
+
+PIDFILE=/run/conjuration-daemon.pid
+CONJURATION_DAEMON_DIR="${CONJURATION_DAEMON_DIR:-/run/conjuration}"
+CONJURATION_SOCKET="${CONJURATION_SOCKET:-${CONJURATION_DAEMON_DIR}/socket}"
+CONJURATION_DAEMON_TMP="${CONJURATION_DAEMON_TMP:-${CONJURATION_DAEMON_DIR}/tmp}"
+
+depend() {
+	:
+#        need net
+#        use logger
+}
+
+start() {
+	##FIXME: Whatabout mkdir/chmod races? It's not really an issue, as long as chmod happens before the direcotry is populated, but races are principally bad.
+	mkdir "${CONJURATION_DAEMON_DIR}"
+	chmod go= "${CONJURATION_DAEMON_DIR}"
+	mkdir "${CONJURATION_DAEMON_TMP}"
+	chmod a= "${CONJURATION_DAEMON_TMP}"
+	ebegin "Starting conjuration daemon"
+	start-stop-daemon --start --quiet --background \
+		--pidfile ${PIDFILE} --make-pidfile \
+		--exec /usr/sbin/conjuration_daemon -- \
+			"${CONJURATION_SOCKET}" \
+			"${CONJURATION_DAEMON_TMP}"
+	eend $?
+}
+
+stop() {
+	ebegin "Stopping conjuration daemon"
+	start-stop-daemon --stop --quiet \
+		--pidfile ${PIDFILE}
+	RET=$?
+	rmdir "${CONJURATION_DAEMON_TMP}"
+	rmdir "${CONJURATION_DAEMON_DIR}"
+	eend ${RET}
+}

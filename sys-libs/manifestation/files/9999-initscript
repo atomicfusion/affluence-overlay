@@ -1,0 +1,49 @@
+#!/sbin/runscript
+# Copyright 1999-2008 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header: /var/cvsroot/gentoo-x86/dev-vcs/git/files/git-daemon.initd,v 1.1 2010/03/17 15:13:27 sping Exp $
+
+##FIXME: Add a socket access control mechanism.
+
+PIDFILE=/run/manifestation-daemon.pid
+MANIFESTATION_DAEMON_DIR="${MANIFESTATION_DAEMON_DIR:-/run/manifestation}"
+MANIFESTATION_SOCKET="${MANIFESTATION_SOCKET:-${MANIFESTATION_DAEMON_DIR}/socket}"
+MANIFESTATION_DAEMON_TMP="${MANIFESTATION_DAEMON_TMP:-${MANIFESTATION_DAEMON_DIR}/tmp}"
+MANIFESTATION_DAEMON_TMP_DIR="${MANIFESTATION_DAEMON_TMP_DIR:-${MANIFESTATION_DAEMON_TMP}/dir}"
+MANIFESTATION_DAEMON_TMP_FILE="${MANIFESTATION_DAEMON_TMP_FILE:-${MANIFESTATION_DAEMON_TMP}/file}"
+
+depend() {
+	:
+#        need net
+#        use logger
+}
+
+start() {
+	##FIXME: Whatabout mkdir/chmod races? It's not really an issue, as long as chmod happens before the direcotry is populated, but races are principally bad.
+	mkdir "${MANIFESTATION_DAEMON_DIR}"
+	chmod go= "${MANIFESTATION_DAEMON_DIR}"
+	mkdir "${MANIFESTATION_DAEMON_TMP}"
+	chmod a= "${MANIFESTATION_DAEMON_TMP}"
+	mkdir "${MANIFESTATION_DAEMON_TMP_DIR}"
+	touch "${MANIFESTATION_DAEMON_TMP_FILE}"
+	ebegin "Starting manifestation daemon"
+	start-stop-daemon --start --quiet --background \
+		--pidfile ${PIDFILE} --make-pidfile \
+		--exec /usr/sbin/manifestation_daemon -- \
+			"${MANIFESTATION_SOCKET}" \
+			"${MANIFESTATION_DAEMON_TMP_DIR}" \
+			"${MANIFESTATION_DAEMON_TMP_FILE}"
+	eend $?
+}
+
+stop() {
+	ebegin "Stopping manifestation daemon"
+	start-stop-daemon --stop --quiet \
+		--pidfile ${PIDFILE}
+	RET=$?
+	rm "${MANIFESTATION_DAEMON_TMP_FILE}"
+	rmdir "${MANIFESTATION_DAEMON_TMP_DIR}"
+	rmdir "${MANIFESTATION_DAEMON_TMP}"
+	rmdir "${MANIFESTATION_DAEMON_DIR}"
+	eend ${RET}
+}
