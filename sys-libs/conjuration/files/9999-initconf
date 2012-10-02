@@ -2,4 +2,4 @@
 
 socket="/run/conjuration.sock"
 socketowner="root:root"
-socketperms="ug=rw,o="
+socketperms="ug=wr,o="

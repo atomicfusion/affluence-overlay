@@ -1,11 +1,14 @@
 #!/sbin/runscript
+# Copyright 1999-2008 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header: /var/cvsroot/gentoo-x86/dev-vcs/git/files/git-daemon.initd,v 1.1 2010/03/17 15:13:27 sping Exp $
 
 ##FIXME: Improve the socket access control mechanism.
 
 pidfile="/run/conjuration-daemon.pid"
-socket="${socket:-/run/conjuration.sock}"
-socketowner="${socketowner:-"root:root"}"
-socketperms="${socketperms:-"ug=rw,o=rw"}"
+socket="${socket:-/run/conjuration.sock)"
+socketowner="${socketowner:-root:root}"
+socketperms="${socketperms:-ug=wr,o=}"
 
 depend() {
 	:
@@ -15,31 +18,23 @@ depend() {
 
 start() {
 	tempdir="$(mktemp -d)"
-	chmod a= "${tempdir}"
+	chown "${socketowner}" "${tempdir}"
+	chmod "${socketperms}" "${tempdir}"
 	ebegin "Starting conjuration daemon"
 	start-stop-daemon --start --quiet --background \
-		--pidfile "${pidfile}" --make-pidfile \
+		--pidfile ${pidfile} --make-pidfile \
 		--exec /usr/sbin/conjuration_daemon -- \
 			"${socket}" \
 			"${tempdir}"
-	while true
-	do
-		if [ -S "${socket}" ]
-		then
-			break
-		fi
-	done
-	chown "${socketowner}" "${socket}"
-	chmod "${socketperms}" "${socket}"
 	eend $?
 }
 
 stop() {
 	ebegin "Stopping conjuration daemon"
 	start-stop-daemon --stop --quiet \
-		--pidfile "${pidfile}"
+		--pidfile ${pidfile}
 	RET=$?
-	##FIXME: Make the daemon actually respond to signals and shutdown properly, and then remove this.
+	##FIXME: Make the daemon actually respond to signals and shutdown properly, and remove this.
 	rm "${socket}"
 	eend ${RET}
 }
