@@ -1,1 +1,1 @@
-MANIFESTATION_SOCKET="/run/manifestation/socket"
+MANIFESTATION_SOCKET="/run/manifestation.sock"
