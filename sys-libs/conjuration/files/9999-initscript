@@ -7,12 +7,6 @@ socket="${socket:-/run/conjuration.sock}"
 socketowner="${socketowner:-"root:root"}"
 socketperms="${socketperms:-"ug=rw,o="}"
 
-depend() {
-	:
-#        need net
-#        use logger
-}
-
 start() {
 	tempdir="$(mktemp -d)"
 	chmod a= "${tempdir}"
@@ -22,6 +16,7 @@ start() {
 		--exec /usr/sbin/conjuration_daemon -- \
 			"${socket}" \
 			"${tempdir}"
+	ret=${?}
 	##FIXME: Add some sort of timeout?
 	while true
 	do
@@ -32,15 +27,15 @@ start() {
 	done
 	chown "${socketowner}" "${socket}"
 	chmod "${socketperms}" "${socket}"
-	eend $?
+	eend ${ret}
 }
 
 stop() {
 	ebegin "Stopping conjuration daemon"
 	start-stop-daemon --stop --quiet \
 		--pidfile "${pidfile}"
-	RET=$?
+	ret=${?}
 	##FIXME: Make the daemon actually respond to signals and shutdown properly, and then remove this.
 	rm "${socket}"
-	eend ${RET}
+	eend ${ret}
 }

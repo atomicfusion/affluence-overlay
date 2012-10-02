@@ -1,7 +1,5 @@
-## These are the defaults.
+# These are the defaults.
 
-#MANIFESTATION_DAEMON_DIR="/run/manifestation"
-#MANIFESTATION_SOCKET="/run/manifestation/socket"
-#MANIFESTATION_DAEMON_TMP="/run/manifestation/tmp"
-#MANIFESTATION_DAEMON_TMP_DIR="/run/manifestation/tmp/dir"
-#MANIFESTATION_DAEMON_TMP_FILE="/run/manifestation/tmp/file"
+socket="/run/manifestation.sock"
+socketowner="root:root"
+socketperms="ug=rw,o="

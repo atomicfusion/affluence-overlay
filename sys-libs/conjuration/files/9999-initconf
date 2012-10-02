@@ -1,4 +1,4 @@
-## These are the defaults.
+# These are the defaults.
 
 socket="/run/conjuration.sock"
 socketowner="root:root"
