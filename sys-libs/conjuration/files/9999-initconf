@@ -1,5 +1,5 @@
 ## These are the defaults.
 
-#CONJURATION_DAEMON_DIR="/run/conjuration"
-#CONJURATION_SOCKET="/run/conjuration/socket"
-#CONJURATION_DAEMON_TMP="/run/conjuration/tmp"
+socket="/run/conjuration.sock"
+socketowner="root:root"
+socketperms="ug=wr,o="

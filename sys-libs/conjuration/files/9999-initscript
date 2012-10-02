@@ -3,12 +3,12 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/dev-vcs/git/files/git-daemon.initd,v 1.1 2010/03/17 15:13:27 sping Exp $
 
-##FIXME: Add a socket access control mechanism.
+##FIXME: Improve the socket access control mechanism.
 
-PIDFILE=/run/conjuration-daemon.pid
-CONJURATION_DAEMON_DIR="${CONJURATION_DAEMON_DIR:-/run/conjuration}"
-CONJURATION_SOCKET="${CONJURATION_SOCKET:-${CONJURATION_DAEMON_DIR}/socket}"
-CONJURATION_DAEMON_TMP="${CONJURATION_DAEMON_TMP:-${CONJURATION_DAEMON_DIR}/tmp}"
+pidfile="/run/conjuration-daemon.pid"
+socket="${socket:-/run/conjuration.sock)"
+socketowner="${socketowner:-root:root}"
+socketperms="${socketperms:-ug=wr,o=}"
 
 depend() {
 	:
@@ -17,26 +17,24 @@ depend() {
 }
 
 start() {
-	##FIXME: Whatabout mkdir/chmod races? It's not really an issue, as long as chmod happens before the direcotry is populated, but races are principally bad.
-	mkdir "${CONJURATION_DAEMON_DIR}"
-	chmod go= "${CONJURATION_DAEMON_DIR}"
-	mkdir "${CONJURATION_DAEMON_TMP}"
-	chmod a= "${CONJURATION_DAEMON_TMP}"
+	tempdir="$(mktemp -d)"
+	chown "${socketowner}" "${tempdir}"
+	chmod "${socketperms}" "${tempdir}"
 	ebegin "Starting conjuration daemon"
 	start-stop-daemon --start --quiet --background \
-		--pidfile ${PIDFILE} --make-pidfile \
+		--pidfile ${pidfile} --make-pidfile \
 		--exec /usr/sbin/conjuration_daemon -- \
-			"${CONJURATION_SOCKET}" \
-			"${CONJURATION_DAEMON_TMP}"
+			"${socket}" \
+			"${tempdir}"
 	eend $?
 }
 
 stop() {
 	ebegin "Stopping conjuration daemon"
 	start-stop-daemon --stop --quiet \
-		--pidfile ${PIDFILE}
+		--pidfile ${pidfile}
 	RET=$?
-	rmdir "${CONJURATION_DAEMON_TMP}"
-	rmdir "${CONJURATION_DAEMON_DIR}"
+	##FIXME: Make the daemon actually respond to signals and shutdown properly, and remove this.
+	rm "${socket}"
 	eend ${RET}
 }
