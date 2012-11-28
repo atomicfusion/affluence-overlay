@@ -1,0 +1,5 @@
+# These are the defaults.
+
+socket="/run/procmounter.sock"
+socketowner="root:root"
+socketperms="ug=rw,o="

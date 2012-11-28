@@ -1,0 +1,38 @@
+#!/sbin/runscript
+
+##FIXME: Improve the socket access control mechanism.
+
+pidfile=/run/procmounter-daemon.pid
+socket="${socket:-/run/procmounter.sock}"
+socketowner="${socketowner:-"root:root"}"
+socketperms="${socketperms:-"ug=rw,o="}"
+
+start() {
+	ebegin "Starting procmounter daemon"
+	start-stop-daemon --start --quiet --background \
+		--pidfile "${pidfile}" --make-pidfile \
+		--exec /usr/sbin/procmounter_daemon -- \
+			"${socket}"
+	ret=${?}
+	##FIXME: Add some sort of timeout?
+        while true
+        do
+                if [ -S "${socket}" ]
+                then
+                        break
+                fi
+        done
+        chown "${socketowner}" "${socket}"
+        chmod "${socketperms}" "${socket}"
+	eend ${ret}
+}
+
+stop() {
+	ebegin "Stopping manifestation daemon"
+	start-stop-daemon --stop --quiet \
+		--pidfile "${pidfile}"
+	ret=${?}
+	##FIXME: Make the daemon actually respond to signals and shutdown properly, and then remove this.
+        rm "${socket}"
+	eend ${ret}
+}
